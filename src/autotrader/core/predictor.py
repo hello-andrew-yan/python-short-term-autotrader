@@ -121,5 +121,6 @@ class StockPredictor:
             .sort_values("Total", ascending=False)
         )
 
+        logger.info("Ignored: %s", ignore)
         self._log_trades(trades, min_confidence)
         return trades
