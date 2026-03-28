@@ -1,0 +1,24 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+
+# Distribution / packaging
+build/
+dist/
+lib/
+lib64/
+wheels/
+*.egg-info/
+*.egg
+MANIFEST
+
+# Environments
+.env
+.envrc
+.venv
+venv/
+
+# Visual Studio Code
+.vscode/
+
+# Ruff
+.ruff_cache/
