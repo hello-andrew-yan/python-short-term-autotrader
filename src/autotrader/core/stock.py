@@ -22,9 +22,12 @@ class StockHistory:
 
     def get_data(self, verbose: bool = False) -> pd.DataFrame:
         logger.info("Downloading stock history for %s", self.tickers)
+        tickers = (
+            [self.tickers] if isinstance(self.tickers, str) else self.tickers
+        )
 
         df = yf.download(
-            self.tickers,
+            tickers,
             period="max",
             group_by="ticker",
             auto_adjust=True,
@@ -40,8 +43,8 @@ class StockHistory:
         return (
             # stack returns DataFrame | Series, cast asserts DataFrame
             cast(pd.DataFrame, df.stack(level=0))  # noqa: PD013 - melt is not equivalent here
-            .groupby(level=1)
-            .resample(self.freq, level=0)
+            .groupby(level="Ticker")
+            .resample(self.freq, level="Date")
             .agg(
                 {
                     "Open": "first",

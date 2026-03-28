@@ -1,19 +1,19 @@
-from autotrader.core.stock import StockHistory
+from autotrader.core import StockDatasetBuilder, StockHistory
 from autotrader.extension.malyarovich import ForwardReturn, MalyarovichSMA
 
 
 def main() -> None:
-    df = StockHistory(["AAPL", "NVDA"]).get_data(verbose=True)
+    history = StockHistory(["AAPL", "NVDA"])
 
-    features = MalyarovichSMA()(df)
-    labels = ForwardReturn(gain_threshold=0.02)(df)
+    feature = MalyarovichSMA()
+    label = ForwardReturn(gain_threshold=0.02)
 
-    combined = features.join(labels, how="inner")
-    X = combined[features.columns]
-    y = combined[labels.name]
+    builder = StockDatasetBuilder(history, features=[feature], label=label)
+    dataset = builder()
 
-    print(X)
-    print(y)
+    print(dataset)
+    print(dataset.X)
+    print(dataset.y)
 
 
 if __name__ == "__main__":

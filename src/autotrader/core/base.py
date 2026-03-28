@@ -45,3 +45,7 @@ class Feature(_Base):
 class Label(_Base):
     @abstractmethod
     def _calculate(self, df: pd.DataFrame) -> pd.Series: ...
+
+    def __call__(self, df: pd.DataFrame) -> pd.Series:
+        self._validate(df)
+        return self._calculate(df)
