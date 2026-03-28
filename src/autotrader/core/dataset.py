@@ -2,8 +2,6 @@ from dataclasses import dataclass
 
 import pandas as pd
 
-from autotrader import beta
-
 
 @dataclass
 class Dataset:
@@ -47,7 +45,6 @@ class Dataset:
 
         return Dataset(self.X[mask], self.y[mask])
 
-    @beta
     def filter_by_ticker(self, tickers: str | list[str]) -> "Dataset":
         if isinstance(tickers, str):
             tickers = [tickers]
@@ -67,4 +64,11 @@ class DatasetSplit:
             f"DatasetSplit(train={len(self.train.X):,}, "
             f"val={len(self.val.X):,}, "
             f"test={len(self.test.X):,})"
+        )
+
+    def filter_by_ticker(self, tickers: str | list[str]) -> "DatasetSplit":
+        return DatasetSplit(
+            train=self.train.filter_by_ticker(tickers),
+            val=self.val.filter_by_ticker(tickers),
+            test=self.test.filter_by_ticker(tickers),
         )

@@ -4,7 +4,7 @@ import pandas as pd
 
 from autotrader import logger
 from autotrader.core.base import Feature, Label
-from autotrader.core.data import Dataset, DatasetSplit
+from autotrader.core.dataset import Dataset, DatasetSplit
 from autotrader.core.stock import StockHistory
 
 
@@ -38,7 +38,7 @@ class StockDatasetBuilder:
             )
 
     def _build(self) -> Dataset:
-        df = self.history.get_data()
+        df = self.history.get_data(verbose=True)
         initial_rows = len(df)
 
         df_features = pd.concat(
