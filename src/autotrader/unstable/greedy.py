@@ -29,8 +29,8 @@ class GreedySearch:
     anchor_features: list[str]
     anchor_helpers: list[str]
     data: SearchDataConfig
-    precision_weight: float = 0.5
-    min_precision: float = 0.70
+    precision_weight: float = 0.75
+    min_precision: float = 0.65
     min_trades: int = 10
     score_delta: float = 0.10
     max_patience: int = 2

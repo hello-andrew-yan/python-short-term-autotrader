@@ -35,7 +35,6 @@ class DatasetBuilder:
         y = self.label(df)
         self._validate(X, y)
         X, y = X.align(y, join="inner", axis=0)
-        print(f"X rows: {len(X)}, y rows: {len(y)}")
         return Dataset(X, y)
 
     def build(self, refresh: bool = False) -> Dataset:
