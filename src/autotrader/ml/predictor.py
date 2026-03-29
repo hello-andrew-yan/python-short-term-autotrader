@@ -22,7 +22,7 @@ TEMP_DEFAULT_CONFIG = dict(
     reg_alpha=3,
     reg_lambda=2,
     random_state=42,
-    early_stopping_rounds=25,
+    early_stopping_rounds=50,
 )
 
 

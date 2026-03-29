@@ -1,3 +1,4 @@
+import logging
 from dataclasses import dataclass
 
 from pandera.typing import DataFrame
@@ -29,11 +30,11 @@ class GreedySearch:
     anchor_features: list[str]
     anchor_helpers: list[str]
     data: SearchDataConfig
-    precision_weight: float = 0.75
-    min_precision: float = 0.65
-    min_trades: int = 10
-    score_delta: float = 0.10
-    max_patience: int = 2
+    min_precision: float
+    min_trades: int
+    diversity_weight: float
+    score_delta: float
+    max_patience: int
     split: DatasetSplit | None = None
 
     def _build_split(self) -> None:
@@ -75,8 +76,14 @@ class GreedySearch:
         vol_ratio = total / trades[T.Total].sum()
         ticker_ratio = len(valid) / len(trades)
 
-        w = self.precision_weight
-        return precision * w + (vol_ratio * ticker_ratio) * (1 - w)
+        feature_tickers = [
+            t for t in valid.index if t not in self.anchor_helpers
+        ]
+        feature_ratio = len(feature_tickers) / max(len(self.candidates), 1)
+
+        coverage = (vol_ratio * ticker_ratio) * (1 + feature_ratio) / 2
+        d = self.diversity_weight
+        return precision * (1 - d) + coverage * d
 
     def _search(self) -> tuple[list[str], list[str]]:
         active = list(set(self.anchor_features + self.anchor_helpers))
@@ -143,21 +150,37 @@ class GreedySearch:
 
 
 def main() -> None:
-    features, helpers = GreedySearch(
+    data = SearchDataConfig(
+        features=SMA(),
+        label=ForwardReturn(gain_threshold=0.015),
+        train=DateWindow("1980-01-01", "2023-02-27"),
+        val=DateWindow("2023-02-28", "2025-02-28"),
+        test=DateWindow("2025-03-01", "2026-03-01"),
+    )
+    searcher = GreedySearch(
         candidates=CANDIDATES,
-        anchor_features=["MU"],
+        anchor_features=["MU", "WDC"],
         anchor_helpers=["SPY"],
-        data=SearchDataConfig(
-            features=SMA(),
-            label=ForwardReturn(gain_threshold=0.015),
-            train=DateWindow("1980-01-01", "2024-06-30"),
-            val=DateWindow("2024-07-01", "2025-06-30"),
-            test=DateWindow("2025-07-01", "2026-03-05"),
-        ),
-    ).run()
+        data=data,
+        min_precision=0.65,
+        min_trades=10,
+        diversity_weight=0.5,
+        score_delta=0.10,
+        max_patience=2,
+    )
+    features, helpers = searcher.run()
+    print(f"Features: {features}")
+    print(f"Helpers: {helpers}")
 
-    print("FEATURES = ", features)
-    print("HELPERS = ", helpers)
+    if searcher.split is None:
+        raise RuntimeError("Split was not built.")
+
+    logging.basicConfig(level=logging.INFO, format="(%(name)s) %(message)s")
+
+    split = searcher.split.get_tickers([*features, *helpers])
+    predictor = StockPredictor()
+    predictor.train(split.train, split.val, verbose=True)
+    predictor.test(split.test, ignore=helpers)
 
 
 if __name__ == "__main__":
