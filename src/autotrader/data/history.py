@@ -6,8 +6,9 @@ import pandera.pandas as pa
 import yfinance as yf
 from pandera.typing import DataFrame
 
+from autotrader import logger
 from autotrader.core.enum import Frequency
-from autotrader.core.schema import StockHistoryFrame as F
+from autotrader.core.schema import HistoryFrame as F
 
 
 @dataclass
@@ -40,6 +41,7 @@ class StockHistory:
         self, verbose: bool = False, refresh: bool = False
     ) -> DataFrame[F]:
         if self._cache is not None and not refresh:
+            logger.info("Returning cached data for %s", self.tickers)
             return self._cache
 
         tickers = (
@@ -55,7 +57,9 @@ class StockHistory:
         )
 
         if df is None or df.empty:
+            logger.warning("No data returned for %s", self.tickers)
             return cast(DataFrame[F], pd.DataFrame())
 
         self._cache = self._resample(df)
+        logger.info("Downloaded %d rows for %s", len(self._cache), self.tickers)
         return self._cache

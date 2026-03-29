@@ -4,7 +4,7 @@ from dataclasses import dataclass
 import pandera.pandas as pa
 from pandera.typing import DataFrame, Series
 
-from autotrader.core.schema import StockHistoryFrame as F
+from autotrader.core.schema import HistoryFrame as F
 
 
 @dataclass

@@ -30,7 +30,7 @@ def beta(
         @wraps(fn)
         def wrapper(*args: Any, **kwargs: Any) -> Any:
             logging.getLogger(fn.__module__).log(
-                log_level, f"Beta: {fn.__name__}"
+                log_level, "Beta: %s", fn.__name__
             )
             warnings.warn(msg, UserWarning, stacklevel=2)
             return fn(*args, **kwargs)
