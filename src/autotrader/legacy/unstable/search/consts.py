@@ -1,19 +1,19 @@
 UNORGANISED = [
-    "V",     # Visa Inc.
-    "GS",    # Goldman Sachs Group, Inc.
-    "APP",   # AppLovin Corporation
-    "CEG",   # Constellation Energy Corporation
-    "ETN",   # Eaton Corporation plc
-    "JPM",   # JPMorgan Chase & Co.
-    "LLY",   # Eli Lilly and Company
-    "MDB",   # MongoDB, Inc.
-    "NOW",   # ServiceNow, Inc.
-    "NXT",   # Nextracker Inc.
-    "SPY",   # State Street SPDR S&P 500 ETF Trust
-    "TTD",   # The Trade Desk, Inc.
-    "UNH",   # UnitedHealth Group Incorporated
-    "VRT",   # Vertiv Holdings Co
-    "VST",   # Vistra Corp.
+    "V",  # Visa Inc.
+    "GS",  # Goldman Sachs Group, Inc.
+    "APP",  # AppLovin Corporation
+    "CEG",  # Constellation Energy Corporation
+    "ETN",  # Eaton Corporation plc
+    "JPM",  # JPMorgan Chase & Co.
+    "LLY",  # Eli Lilly and Company
+    "MDB",  # MongoDB, Inc.
+    "NOW",  # ServiceNow, Inc.
+    "NXT",  # Nextracker Inc.
+    "SPY",  # State Street SPDR S&P 500 ETF Trust
+    "TTD",  # The Trade Desk, Inc.
+    "UNH",  # UnitedHealth Group Incorporated
+    "VRT",  # Vertiv Holdings Co
+    "VST",  # Vistra Corp.
     "ABNB",  # Airbnb, Inc.
     "ANET",  # Arista Networks, Inc.
     "COST",  # Costco Wholesale Corporation

@@ -20,7 +20,7 @@ class SearchConfig:
     anchor_helpers: list[str]
 
     min_trades: int = 10
-    min_precision: float = 0.65
+    min_precision: float = 0.7
 
     max_patience: int = 2
     tolerance: float = 0.10
