@@ -1,3 +1,4 @@
+from dataclasses import asdict, dataclass
 from typing import cast
 
 import pandas as pd
@@ -9,26 +10,44 @@ from autotrader.core.schema import HistoryFrame as F
 from autotrader.core.schema import TradeResult as T
 from autotrader.ml.dataset import Dataset
 
-TEMP_DEFAULT_CONFIG = dict(
-    nthread=1,
-    n_estimators=2500,
-    max_depth=5,
-    learning_rate=0.0025,
-    objective="binary:logistic",
-    gamma=0.3,
-    min_child_weight=5,
-    subsample=0.7,
-    colsample_bytree=0.7,
-    reg_alpha=3,
-    reg_lambda=2,
-    random_state=42,
-    early_stopping_rounds=50,
-)
+
+# https://xgboost.readthedocs.io/en/latest/python/python_api.html#xgboost.XGBClassifier
+@dataclass
+class PredictorConfig:
+    # Model
+    objective: str = "binary:logistic"
+    n_estimators: int = 1000
+    max_depth: int = 5
+
+    # Learning
+    learning_rate: float = 0.01
+    early_stopping_rounds: int = 50
+
+    # Regularisation
+    gamma: float = 0.3
+    min_child_weight: int = 5
+    reg_alpha: int = 3
+    reg_lambda: int = 2
+
+    # Sampling
+    subsample: float = 0.7
+    colsample_bytree: float = 0.7
+
+    # Hardware
+    nthread: int = -1
+    tree_method: str = "hist"
+    device: str = "cpu"
+
+    # Reproducibility
+    random_state: int = 42
+
+    def to_dict(self) -> dict:
+        return asdict(self)
 
 
 class StockPredictor:
-    def __init__(self, config: dict | None = None):
-        self.config = config or TEMP_DEFAULT_CONFIG
+    def __init__(self, config: PredictorConfig | None = None):
+        self.config = (config or PredictorConfig()).to_dict()
         self.model: xgb.XGBClassifier | None = None
 
     def _log_trades(self, trades: DataFrame[T], min_confidence: float) -> None:
@@ -46,7 +65,7 @@ class StockPredictor:
     def train(
         self, train: Dataset, val: Dataset, verbose: bool = False
     ) -> "StockPredictor":
-        logger.info(f"Training on {len(train.X)} weekly samples")
+        logger.info("Training on %d samples", len(train.X))
 
         p = train.y.mean()
         self.config.setdefault("scale_pos_weight", (1 - p) / p if p else 1.0)
@@ -84,6 +103,7 @@ class StockPredictor:
             len(test.X),
             min_confidence * 100,
         )
+        # self.model.set_params(device="cpu")
         probs = pd.Series(
             self.model.predict_proba(test.X)[:, 1], index=test.X.index
         )

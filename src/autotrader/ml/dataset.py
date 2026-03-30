@@ -13,6 +13,9 @@ class Dataset:
     y: pd.Series
 
     def __post_init__(self) -> None:
+        self.X = self.X.sort_index(axis=0).sort_index(axis=1)
+        self.y = self.y.sort_index()
+
         H.validate(self.X)
         if not self.X.index.equals(self.y.index):
             raise ValueError("X and y indices must match")
@@ -22,20 +25,21 @@ class Dataset:
         start: str | pd.Timestamp | None = None,
         end: str | pd.Timestamp | None = None,
     ) -> "Dataset":
-        if start and end and pd.Timestamp(start) > pd.Timestamp(end):
-            raise ValueError(f"Start {start} must be before end {end}")
+        start_ts = pd.Timestamp(start) if start else None
+        end_ts = pd.Timestamp(end) if end else None
 
         dates = pd.to_datetime(self.X.index.get_level_values(H.Date))
-        mask = (dates >= pd.Timestamp(start) if start else True) & (
-            dates <= pd.Timestamp(end) if end else True
+        mask = (dates >= start_ts if start_ts else True) & (
+            dates <= end_ts if end_ts else True
         )
 
-        return Dataset(cast(pd.DataFrame, self.X[mask]), self.y[mask])
+        return Dataset(cast(pd.DataFrame, self.X.loc[mask]), self.y.loc[mask])
 
     def get_tickers(self, tickers: str | list[str]) -> "Dataset":
         _tickers = [tickers] if isinstance(tickers, str) else tickers
         mask = self.X.index.get_level_values(H.Ticker).isin(_tickers)
-        return Dataset(self.X[mask], self.y[mask])
+
+        return Dataset(self.X.loc[mask], self.y.loc[mask])
 
 
 @dataclass

@@ -31,10 +31,14 @@ class DatasetBuilder:
 
     def _build(self, verbose: bool = False) -> Dataset:
         df = self.history(verbose=verbose)
-        X = pd.concat([feature(df) for feature in self.features], axis=1)
+
+        X = pd.concat([f(df) for f in sorted(self.features, key=str)], axis=1)
         y = self.label(df)
         self._validate(X, y)
+
         X, y = X.align(y, join="inner", axis=0)
+        X = X.dropna()
+
         return Dataset(X, y)
 
     def build(self, refresh: bool = False) -> Dataset:

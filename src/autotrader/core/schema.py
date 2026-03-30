@@ -7,7 +7,7 @@ from pandera.typing import Index, Series
 
 class HistoryIndex(pa.DataFrameModel):
     Ticker: Index[str]
-    Date: Index[str]
+    Date: Index[pa.DateTime]
 
     class Config:
         multiindex_coerce = True

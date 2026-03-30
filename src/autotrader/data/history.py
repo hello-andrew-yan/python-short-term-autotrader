@@ -14,8 +14,19 @@ from autotrader.core.schema import HistoryFrame as F
 @dataclass
 class StockHistory:
     tickers: str | list[str]
+    start: str | pd.Timestamp
+    end: str | pd.Timestamp
     freq: Frequency = Frequency.WEEKLY
     _cache: DataFrame[F] | None = field(default=None, init=False, repr=False)
+
+    def __post_init__(self) -> None:
+        self.start = self._to_str(self.start)
+        self.end = self._to_str(self.end)
+
+    def _to_str(self, date: str | pd.Timestamp) -> str:
+        if isinstance(date, pd.Timestamp):
+            return date.strftime("%Y-%m-%d")
+        return str(date)
 
     @pa.check_types
     def _resample(self, df: pd.DataFrame) -> DataFrame[F]:
@@ -50,9 +61,10 @@ class StockHistory:
 
         df = yf.download(
             tickers,
-            period="max",
+            start=self.start,
+            end=self.end,
             group_by="ticker",
-            auto_adjust=True,
+            auto_adjust=False,
             progress=verbose,
         )
 
