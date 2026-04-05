@@ -6,7 +6,7 @@ from pandas_ta.statistics import zscore
 from pandera.typing import DataFrame, Series
 
 from autotrader.core.base import Feature, Label
-from autotrader.core.schema import HistoryFrame as F
+from autotrader.core.schemas import StockPriceData as D
 
 
 class SMA(Feature):
@@ -22,11 +22,11 @@ class SMA(Feature):
         self.slope = slope
         self.volume = volume
 
-    def _calculate(self, df: DataFrame[F]) -> DataFrame:
-        group = df.groupby(level=F.Ticker)
-        close = df[F.Close]
-        s_sma = group[F.Close].transform(lambda x: sma(x, length=self.short))
-        l_sma = group[F.Close].transform(lambda x: sma(x, length=self.long))
+    def _calculate(self, df: DataFrame[D]) -> DataFrame:
+        group = df.groupby(level=D.Ticker)
+        close = df[D.Close]
+        s_sma = group[D.Close].transform(lambda x: sma(x, length=self.short))
+        l_sma = group[D.Close].transform(lambda x: sma(x, length=self.long))
 
         result = pd.DataFrame(
             {
@@ -36,9 +36,9 @@ class SMA(Feature):
                 / l_sma
                 * 100,
                 f"SMA_{self.short}_Slope_{self.slope}": s_sma.groupby(
-                    level=F.Ticker
+                    level=D.Ticker
                 ).pct_change(periods=self.slope),
-                f"Volume_Z_{self.short}": group[F.Volume].transform(
+                f"Volume_Z_{self.short}": group[D.Volume].transform(
                     lambda x: zscore(x, length=self.volume)
                 ),
             },
@@ -52,9 +52,9 @@ class ForwardReturn(Label):
         self.gain_threshold = gain_threshold
         self.horizon = horizon
 
-    def _calculate(self, df: DataFrame[F]) -> Series:
-        future_price = df.groupby(level=F.Ticker)[F.Close].shift(-self.horizon)
-        forward_return = future_price / df[F.Close] - 1
+    def _calculate(self, df: DataFrame[D]) -> Series:
+        future_price = df.groupby(level=D.Ticker)[D.Close].shift(-self.horizon)
+        forward_return = future_price / df[D.Close] - 1
         label = (forward_return >= self.gain_threshold).astype(int)
         label.name = (
             f"Forward_Return_{self.horizon}_Gain_PCT_{self.gain_threshold}"

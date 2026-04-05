@@ -4,66 +4,36 @@ from pandera.typing import DataFrame
 from tqdm import tqdm
 
 from autotrader import beta
-from autotrader.core.schema import (
-    TradeResult as T,
-)
-from autotrader.data.history import StockHistory
-from autotrader.ml import DatasetBuilder, DatasetSplit, StockPredictor
-from autotrader.ml.predictor import PredictorConfig
-from autotrader.unstable.search.config import (
-    DatasetConfig,
-)
+from beta.core.schemas import TradeResult as T
+from beta.model.dataset import DatasetSplit
+from beta.model.predictor import PredictorConfig, StockPredictor
 
 
 @beta
 @dataclass
 class GreedySearch:
+    split: DatasetSplit
+    pred_config: PredictorConfig
+
     candidates: list[str]
     anchor_features: list[str]
     anchor_helpers: list[str]
-    data_cfg: DatasetConfig
-    pred_cfg: PredictorConfig
+
     min_precision: float
     min_trades: int
     diversity_weight: float
+
     score_delta: float
     max_patience: int
-    split: DatasetSplit | None = None
-
-    def _build_split(self) -> None:
-        if self.split is not None:
-            return
-
-        all_tickers = list(
-            set(self.candidates + self.anchor_features + self.anchor_helpers)
-        )
-        builder = DatasetBuilder(
-            StockHistory(
-                tickers=all_tickers,
-                start=self.data_cfg.train.start,
-                end=self.data_cfg.test.end,
-            ),
-            self.data_cfg.features,
-            self.data_cfg.label,
-        )
-        self.split = DatasetSplit.from_dates(
-            builder.build(),
-            train=self.data_cfg.train,
-            val=self.data_cfg.val,
-            test=self.data_cfg.test,
-        )
 
     def _evaluate(self, tickers: list[str]) -> DataFrame[T] | None:
-        if self.split is None:
-            raise ValueError("Split must be built before evaluating.")
-
         data = self.split.get_tickers(tickers)
         if data.train.X.empty or data.val.X.empty or data.test.X.empty:
             return None
 
         return (
-            StockPredictor(config=self.pred_cfg)
-            .train(data.train, data.val)
+            StockPredictor(config=self.pred_config)
+            .train(data.train, data.val, verbose=False)
             .test(data.test)
         )
 
@@ -89,7 +59,7 @@ class GreedySearch:
         d = self.diversity_weight
         return precision * (1 - d) + coverage * d
 
-    def _run_pass(
+    def _run_pass(  # noqa: PLR0913
         self,
         active: list[str],
         remaining: list[str],
@@ -114,12 +84,17 @@ class GreedySearch:
                 f"added={last_added or 'N/A'}"
             )
             for c in pbar:
+                pbar.set_postfix(
+                    candidate=c,
+                    patience=f"{patience}/{self.max_patience}",
+                    best=f"{new_score:.4f}",
+                )
+
                 result = self._evaluate(active + [c])
                 if result is None:
                     continue
 
                 score = self._score(result)
-                # tqdm.write(f"{c}: {score}")
                 if score == 0.0:
                     zero_counts[c] = zero_counts.get(c, 0) + 1
                     continue
@@ -128,11 +103,6 @@ class GreedySearch:
                     new_score = score
                     best_candidate = c
                     best_trades = result
-                pbar.set_postfix(
-                    candidate=c,
-                    patience=f"{patience}/{self.max_patience}",
-                    best=f"{new_score:.4f}",
-                )
 
         return best_candidate, new_score, best_trades
 
@@ -206,5 +176,4 @@ class GreedySearch:
         return features, helpers, zeros
 
     def run(self) -> tuple[list[str], list[str], list[tuple[str, int]]]:
-        self._build_split()
         return self._search()
