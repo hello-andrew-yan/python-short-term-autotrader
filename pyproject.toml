@@ -14,7 +14,7 @@ dependencies = [
   "pandas-ta>=0.4.71b0",
   "xgboost==3.2.0",
   "scikit-learn==1.8.0",
-  "yahooquery>=2.4.0"
+  "alpaca-py>=0.43.0"
 ]
 
 [dependency-groups]

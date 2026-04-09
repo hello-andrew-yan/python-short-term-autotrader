@@ -50,15 +50,28 @@ class StockPredictor:
 
         return self
 
+    def predict(
+        self, data: pd.DataFrame, threshold: float | None = None
+    ) -> pd.Series:
+        if self.model is None:
+            raise ValueError("Model must be trained before making predictions.")
+
+        probs = pd.Series(
+            self.model.predict_proba(data)[:, 1], index=data.index
+        )
+
+        if threshold is not None:
+            return probs[probs >= threshold]
+
+        return probs
+
     def eval(self, test: Dataset, min_confidence: float = 0.5) -> DataFrame[PM]:
         if self.model is None:
             raise ValueError("Model must be trained before evaluation.")
 
-        probs = pd.Series(
-            self.model.predict_proba(test.X)[:, 1], index=test.X.index
-        )
+        hits = self.predict(test.X, threshold=min_confidence)
         stats = (
-            test.y[probs >= min_confidence]
+            test.y.loc[hits.index]
             .groupby(level=StockPriceIndex.Ticker)
             .agg(Total="count", Wins="sum", Precision="mean")
             .assign(Losses=lambda df: df.Total - df.Wins)

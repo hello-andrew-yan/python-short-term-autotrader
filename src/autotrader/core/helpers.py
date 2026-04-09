@@ -17,12 +17,13 @@ def fingerprint(df: pd.DataFrame | pd.Series) -> str:
 
 def print_metrics(
     df: DataFrame[PM],
+    title: str = "Performance Metrics",
     min_precision: float | None = None,
     sort_by: str | list[str] | None = None,
     ascending: bool | list[bool] = False,
 ):
     console = Console()
-    title = "Performance Metrics"
+    title = "\n" + title
     if min_precision is not None:
         title += f", [yellow]min_precision={min_precision:.2f}[/yellow]"
 

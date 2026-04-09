@@ -19,3 +19,6 @@ class DateWindow:
     @classmethod
     def from_string(cls, start: str, end: str) -> "DateWindow":
         return cls(pd.Timestamp(start), pd.Timestamp(end))
+
+    def __str__(self) -> str:
+        return f"{self.start.date()} to {self.end.date()}"

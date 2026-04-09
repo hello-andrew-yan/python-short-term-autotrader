@@ -6,22 +6,22 @@ from dataclasses import dataclass
 class PredictorConfig:
     # Model
     objective: str = "binary:logistic"
-    n_estimators: int = 4000
-    max_depth: int = 5
+    n_estimators: int = 1000
+    max_depth: int = 6
 
     # Learning
     learning_rate: float = 0.001
-    early_stopping_rounds: int = 50
+    early_stopping_rounds: int = 25
 
     # Regularisation
-    gamma: float = 0.3
-    min_child_weight: int = 5
-    reg_alpha: float = 3.0
-    reg_lambda: float = 2.0
+    gamma: float = 0.5  # Minimum loss reduction to split
+    min_child_weight: int = 3  # Minimum weight needed per leaf
+    reg_alpha: float = 1.0  # L1 regularisation for pruning
+    reg_lambda: float = 1.0  # L2 regularisation for smoothing
 
     # Sampling
-    subsample: float = 0.7
-    colsample_bytree: float = 0.7
+    subsample: float = 0.8
+    colsample_bytree: float = 0.8
 
     # Hardware
     nthread: int = -1
