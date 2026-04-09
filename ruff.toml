@@ -8,4 +8,4 @@ ignore = ["D100", "D101", "D102", "D103", "D104", "D105", "D106", "D107"]
 convention = "google"
 
 [lint.isort]
-known-first-party = ["grocery"]
+known-first-party = ["autotrader"]
