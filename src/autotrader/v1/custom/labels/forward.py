@@ -1,14 +1,14 @@
 import pandas as pd
 from pandera.typing import DataFrame
 
-from autotrader.v1.core.base import Label
-from autotrader.v1.core.schemas import StockPriceData as D
+from autotrader.core.base import Label
+from autotrader.core.schemas import StockPriceData as D
 
 
 class ForwardReturn(Label):
-    def __init__(self, gain_threshold: float, horizon: int = 1):
-        self.gain_threshold = gain_threshold
+    def __init__(self, horizon: int = 1, gain_threshold: float = 0.01):
         self.horizon = horizon
+        self.gain_threshold = gain_threshold
 
     def _calculate(self, df: DataFrame[D]) -> pd.Series:
         returns = (
@@ -22,5 +22,5 @@ class ForwardReturn(Label):
             (returns >= self.gain_threshold)
             .astype(int)
             .loc[returns.notna()]
-            .rename(f"Return_{self.horizon}H_{self.gain_threshold}G")
+            .rename(f"Return_{self.horizon}_{self.gain_threshold}")
         )

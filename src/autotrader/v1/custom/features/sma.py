@@ -2,8 +2,8 @@ import pandas as pd
 from pandas_ta.overlap import sma
 from pandera.typing import DataFrame
 
-from autotrader.v1.core.base import Feature
-from autotrader.v1.core.schemas import StockPriceData as D
+from autotrader.core.base import Feature
+from autotrader.core.schemas import StockPriceData as D
 
 
 class _SMABase(Feature):
@@ -38,7 +38,7 @@ class SMASlope(_SMABase):
         )
 
         return pd.DataFrame(
-            {f"SMA_{self.period}_Slope_{self.lookback}": slope}, index=df.index
+            {f"SMA_Slope_{self.period}_{self.lookback}": slope}, index=df.index
         ).dropna()
 
 

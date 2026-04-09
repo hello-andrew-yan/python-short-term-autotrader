@@ -3,8 +3,8 @@ import calendar
 import pandas as pd
 from pandera.typing import DataFrame
 
-from autotrader.v1.core.base import Feature
-from autotrader.v1.core.schemas import StockPriceData as D
+from autotrader.core.base import Feature
+from autotrader.core.schemas import StockPriceData as D
 
 
 class MonthFeature(Feature):
