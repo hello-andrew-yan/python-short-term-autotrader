@@ -18,6 +18,13 @@ class StockPriceData(StockPriceIndex):
     Volume: Series[float] = pa.Field(coerce=True)
 
 
+class TradeResult(pa.DataFrameModel):
+    Total: Series[int]
+    Wins: Series[int]
+    Losses: Series[int]
+    Precision: Series[float]
+
+
 @dataclass(frozen=True)
 class DateWindow:
     start: pd.Timestamp
@@ -33,6 +40,10 @@ class DateWindow:
 
         return cls(s, e)
 
-    def __iter__(self):
-        yield self.start
-        yield self.end
+    def extend(self, other: "DateWindow") -> "DateWindow":
+        if not isinstance(other, DateWindow):
+            raise TypeError("Can only extend with another DateWindow")
+
+        return DateWindow(
+            start=min(self.start, other.start), end=max(self.end, other.end)
+        )

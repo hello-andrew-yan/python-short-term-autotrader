@@ -1,3 +1,4 @@
+import logging
 from dataclasses import asdict, dataclass
 
 import pandas as pd
@@ -5,8 +6,8 @@ import xgboost as xgb
 from pandera.typing import DataFrame
 
 from autotrader import logger
-from autotrader.model.dataset import Dataset
-from beta.core.schemas import TradeResult as T
+from autotrader.v1.core.schemas import TradeResult
+from autotrader.v1.model.dataset import Dataset
 
 
 # https://xgboost.readthedocs.io/en/latest/python/python_api.html#xgboost.XGBClassifier
@@ -14,7 +15,7 @@ from beta.core.schemas import TradeResult as T
 class PredictorConfig:
     # Model
     objective: str = "binary:logistic"
-    n_estimators: int = 2000
+    n_estimators: int = 4000
     max_depth: int = 5
 
     # Learning
@@ -46,60 +47,60 @@ class StockPredictor:
         self.model = None
 
     def train(
-        self, train: Dataset, val: Dataset | None = None, verbose: bool = False
+        self, train: Dataset, val: Dataset | None = None
     ) -> "StockPredictor":
         p = train.y.mean()
-        weight = (1 - p) / p if p > 0 else 1.0
+        weight = (1 - p) / p if 0 < p < 1 else 1.0
 
         logger.info(
-            f"samples={len(train.X)}, balance: {p:.2%}, weight: {weight:.2f}"
+            f"samples={len(train.X)}, balance={p:.2%}, weight={weight:.2f}"
         )
 
+        params = asdict(self.config)
+        stopping = params.pop("early_stopping_rounds") if val else None
+
         self.model = xgb.XGBClassifier(
-            **asdict(self.config), scale_pos_weight=weight
+            **params, scale_pos_weight=weight, early_stopping_rounds=stopping
         )
-        if val is None:
-            self.model.set_params(early_stopping_rounds=None)
 
         self.model.fit(
             train.X,
             train.y,
             eval_set=[(val.X, val.y)] if val else None,
-            verbose=100 if verbose else False,
+            verbose=100
+            if logger.getEffectiveLevel() <= logging.INFO
+            else False,
         )
 
-        importance = pd.Series(
+        self.importance = pd.Series(
             self.model.feature_importances_, index=train.X.columns
-        )
-        logger.info(
-            f"importance:\n{importance.sort_values(ascending=False).head(5)}"
-        )
+        ).sort_values(ascending=False)
 
+        logger.info(
+            f"importance=\n{self.importance.sort_values(ascending=False)}"
+        )
         return self
 
     def test(
         self,
         test: Dataset,
         min_confidence: float = 0.5,
-    ) -> DataFrame[T]:
+    ) -> DataFrame[TradeResult]:
         if self.model is None:
             raise ValueError("Model must be trained before testing.")
 
         probs = pd.Series(
             self.model.predict_proba(test.X)[:, 1], index=test.X.index
         )
-        result = (
+        stats = (
             test.y[probs >= min_confidence]
             .groupby(level="Ticker")
-            .agg(["count", "sum"])
-            .rename(columns={"count": "Total", "sum": "Wins"})
+            .agg(Total="count", Wins="sum")
             .assign(
-                **{
-                    "Losses": lambda x: x["Total"] - x["Wins"],
-                    "Precision": lambda x: (x["Wins"] / x["Total"]).fillna(0.0),
-                }
+                Losses=lambda df: df.Total - df.Wins,
+                Precision=lambda df: (df.Wins / df.Total).fillna(0.0),
             )
-            .astype({"Total": int, "Wins": int, "Losses": int})
             .sort_values("Total", ascending=False)
         )
-        return T.validate(result)
+
+        return TradeResult.validate(stats)

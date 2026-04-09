@@ -1,15 +1,22 @@
+import hashlib
+
+import pandas as pd
 from pandera.typing import DataFrame
 from rich.console import Console
 from rich.table import Table
 
-from autotrader import beta
-from beta.core.schemas import TradeResult
+from autotrader.v1.core.schemas import TradeResult
 
 
-@beta
+def fingerprint(df: pd.DataFrame | pd.Series) -> str:
+    return hashlib.md5(
+        pd.util.hash_pandas_object(df, index=True).to_numpy().tobytes()
+    ).hexdigest()
+
+
 def print_results(
     df: DataFrame[TradeResult],
-    min_precision: float | None,
+    min_precision: float | None = None,
 ):
     console = Console()
     table = Table(header_style="bold magenta")

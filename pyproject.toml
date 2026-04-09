@@ -1,11 +1,11 @@
 [build-system]
-requires = ["setuptools >= 82.0.1"]
+requires = ["setuptools>=80", "setuptools-scm[simple]>=9.2"]
 build-backend = "setuptools.build_meta"
 
 [project]
 name = "autotrader"
 description = "Experimental weekly autotrading model."
-version = "1.0.0"
+dynamic = ["version"]
 requires-python = ">=3.12, <3.14"
 authors = [{ name = "Andrew", email = "hello.andrew.yan@outlook.com" }]
 dependencies = [
@@ -25,6 +25,9 @@ dev = [
 
 [tool.setuptools.packages.find]
 where = ["src"]
+
+[tool.setuptools_scm]
+version_file = "src/autotrader/_version.py"
 
 [tool.uv]
 link-mode = "copy"

@@ -6,7 +6,7 @@ import pandas as pd
 import yfinance as yf
 from pandera.typing import DataFrame
 
-from autotrader.core.schemas import DateWindow, StockPriceData
+from autotrader.v1.core.schemas import DateWindow, StockPriceData
 
 
 @dataclass(frozen=True)

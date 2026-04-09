@@ -3,7 +3,7 @@ from abc import ABC, abstractmethod
 import pandas as pd
 from pandera.typing import DataFrame
 
-from autotrader.core.schemas import StockPriceData
+from autotrader.v1.core.schemas import StockPriceData
 
 
 class Feature(ABC):
